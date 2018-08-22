@@ -18,6 +18,10 @@ defmodule Skn.Bot.Repo do
     :mnesia.create_table(:uuid_record,[disc_copies: [node()], record_name: :uuid_record, attributes: fields(@uuid_record_fields)])
   end
 
+  def create_ets() do
+    :ets.new(:bot_session, [:public, :set, :named_table, {:read_concurrency, true}])
+  end
+
   def init(_, opts) do
     {:ok, Keyword.put(opts, :url, System.get_env("DATABASE_URL"))}
   end

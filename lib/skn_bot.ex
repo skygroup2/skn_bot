@@ -7,7 +7,7 @@ defmodule Skn.Bot.Sup do
 
   def init(_) do
     children = [
-      worker(RWSerializer, []),
+      worker(RWSerializer, [[]]),
     ]
     supervise(children, strategy: :one_for_one)
   end

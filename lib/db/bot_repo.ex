@@ -18,7 +18,7 @@ defmodule Skn.Bot.Repo do
     :mnesia.create_table(:uuid_record,[disc_copies: [node()], record_name: :uuid_record, attributes: fields(@uuid_record_fields)])
   end
 
-  def create_ets() do
+  def create_db() do
     :ets.new(:bot_session, [:public, :set, :named_table, {:read_concurrency, true}])
   end
 

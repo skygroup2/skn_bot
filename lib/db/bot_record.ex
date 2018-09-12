@@ -41,17 +41,17 @@ defmodule Skn.DB.Bot do
     is_gen_name = Skn.Config.get(:is_gen_name, true)
     if is_gen_name == true do
       l = Enum.random(min_len..(max_len - 1))
-      fc = :rand.uniform(26) + 64
-      rs = if mix_num == true, do: 36, else: 26
+      fc = Enum.random(Enum.shuffle(65..90))
+      rs = if mix_num == true, do: 35, else: 25
       <<fc>> <> ((Enum.map 0..l, fn (_) ->
-        v = :rand.uniform(rs) + 96
-        if v > 122, do: v - 97 + 48, else: v
+        v = Enum.random(Enum.shuffle(97..(rs + 97)))
+        if v > 122, do: v - 123 + 48, else: v
       end) |> :binary.list_to_bin)
     else
-      last = :ets.last(:ea_names)
+      last = :ets.last(:mmorpg_names)
       first = 0
       i = Enum.random(Enum.shuffle(first..last))
-      [{_, n}] = :ets.lookup(:ea_names, i)
+      [{_, n}] = :ets.lookup(:mmorpg_names, i)
       n
     end
   end

@@ -40,17 +40,18 @@ defmodule Skn.DB.Bot do
   def gen_player_name(min_len \\ 5, max_len \\ 9, mix_num \\ false, start_number\\ false) do
     is_gen_name = Skn.Config.get(:is_gen_name, true)
     if is_gen_name == true do
-      letters_low = Enum.to_list(97..122)
-      letters = Enum.to_list(65..90) ++ letters_low
-      digits = Enum.to_list(48..57)
-      letter_low_digits = Enum.shuffle(letters_low ++ digits)
+      :rand.seed(:exs64, :os.timestamp())
+      letter_low = 97..122
+      letter_up = 65..90
+      digit = 48..57
+
       l = Enum.random(min_len..(max_len - 1))
       fc = if start_number == true do
-        Enum.random(Enum.shuffle(letters ++ digits))
+        Enum.random(Enum.random([letter_low, letter_up, digit]))
       else
-        Enum.random(letters)
+        Enum.random(Enum.random([letter_up, letter_low]))
       end
-      rs = if mix_num == true, do: letter_low_digits, else: letters_low
+      rs = if mix_num == true, do: Enum.random([letter_low, digit]), else: letter_low
       <<fc>> <> ((Enum.map 0..l, fn (_) ->
         Enum.random(rs)
       end) |> :binary.list_to_bin)

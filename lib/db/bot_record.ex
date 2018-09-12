@@ -41,14 +41,12 @@ defmodule Skn.DB.Bot do
     is_gen_name = Skn.Config.get(:is_gen_name, true)
     if is_gen_name == true do
       l = Enum.random(min_len..(max_len - 1))
-      fc = :rand.uniform(26) + 96
+      fc = :rand.uniform(26) + 64
       rs = if mix_num == true, do: 36, else: 26
-      <<fc>> <> (Enum.map 0..l, fn (_) ->
+      <<fc>> <> ((Enum.map 0..l, fn (_) ->
         v = :rand.uniform(rs) + 96
         if v > 122, do: v - 97 + 48, else: v
-      end)
-      |> :binary.list_to_bin
-      |> String.capitalize
+      end) |> :binary.list_to_bin)
     else
       last = :ets.last(:ea_names)
       first = 0

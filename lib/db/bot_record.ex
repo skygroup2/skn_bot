@@ -37,15 +37,23 @@ defmodule Skn.DB.Bot do
     end
   end
 
-  def gen_player_name(min_len \\ 5, max_len \\ 9, mix_num \\ false) do
-    is_gen_name = Skn.Config.get(:is_gen_name, true)
+  def gen_player_name(min_len \\ 5, max_len \\ 9, mix_num \\ false, start_number\\ false) do
+#    is_gen_name = Skn.Config.get(:is_gen_name, true)
+    is_gen_name = true
+    letters_low = Enum.to_list(97..122)
+    letters = Enum.to_list(65..90) ++ letters_low
+    digits = Enum.to_list(48..57)
+    letter_low_digits = Enum.shuffle(letters_low ++ digits)
     if is_gen_name == true do
       l = Enum.random(min_len..(max_len - 1))
-      fc = Enum.random(Enum.shuffle(65..90))
-      rs = if mix_num == true, do: 35, else: 25
+      fc = if start_number == true do
+        Enum.random(Enum.shuffle(letters ++ digits))
+      else
+        Enum.random(letters)
+      end
+      rs = if mix_num == true, do: letter_low_digits, else: letters_low
       <<fc>> <> ((Enum.map 0..l, fn (_) ->
-        v = Enum.random(Enum.shuffle(97..(rs + 97)))
-        if v > 122, do: v - 123 + 48, else: v
+        Enum.random(rs)
       end) |> :binary.list_to_bin)
     else
       last = :ets.last(:mmorpg_names)

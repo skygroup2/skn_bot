@@ -39,11 +39,11 @@ defmodule Skn.DB.Bot do
 
   def gen_player_name(min_len \\ 5, max_len \\ 9, mix_num \\ false, start_number\\ false) do
     is_gen_name = Skn.Config.get(:is_gen_name, true)
-    letters_low = Enum.to_list(97..122)
-    letters = Enum.to_list(65..90) ++ letters_low
-    digits = Enum.to_list(48..57)
-    letter_low_digits = Enum.shuffle(letters_low ++ digits)
     if is_gen_name == true do
+      letters_low = Enum.to_list(97..122)
+      letters = Enum.to_list(65..90) ++ letters_low
+      digits = Enum.to_list(48..57)
+      letter_low_digits = Enum.shuffle(letters_low ++ digits)
       l = Enum.random(min_len..(max_len - 1))
       fc = if start_number == true do
         Enum.random(Enum.shuffle(letters ++ digits))

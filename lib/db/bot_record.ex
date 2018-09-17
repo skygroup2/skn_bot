@@ -98,7 +98,7 @@ defmodule Skn.DB.Bot do
   end
 
   def gen_uuid do
-    uuid = UUID.uuid1
+    uuid = UUID.uuid4
     case Skn.DB.UUID.get({:uuid, uuid}) do
       {:ok, %{status: 1}} ->
         gen_uuid()

@@ -118,9 +118,9 @@ defmodule Skn.DB.Bot do
     seed = :rand.uniform(500000)
     device = Skn.Config.get(:bot_device, :android)
     hmac = cond do
-      device == :androidcn ->
+      device == :androidcn or device == :androidcn18 ->
         "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
-      device == :ioscn or device == :ios ->
+      device == :ioscn or device == :ioscn18 or device == :ios ->
         "6732911bfeee56d409a806ff136cd80596c2cf220c737f3435f2ad037952f50f"
       true ->
         # :crypto.hash(:sha256, mac) |> Base.encode16(case: :lower)

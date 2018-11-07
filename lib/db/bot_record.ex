@@ -40,7 +40,9 @@ defmodule Skn.DB.Bot do
   def gen_player_name(min_len \\ 5, max_len \\ 9, mix_num \\ false, start_number\\ false) do
     is_gen_name = Skn.Config.get(:is_gen_name, true)
     if is_gen_name == true do
-      :rand.seed(:exs64, :os.timestamp())
+      alg = Enum.random([:exs64, :exsplus, :exsp, :exs1024, :exs1024s, :exrop])
+      alg_seed = {System.system_time(:millisecond), :erlang.phash2(self()), :erlang.phash2(:crypto.strong_rand_bytes(max_len))}
+      :rand.seed(alg, alg_seed)
       letter_low = 97..122
       letter_up = 65..90
       digit = 48..57

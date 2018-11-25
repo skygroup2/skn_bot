@@ -1,6 +1,8 @@
 defmodule Skn.Bot.Repo do
   require Record
-  use Ecto.Repo, otp_app: :skn_bot
+  use Ecto.Repo,
+    otp_app: :skn_bot,
+    adapter: Ecto.Adapters.Postgres
 
   @bot_record_fields [id: :nil, config: %{}, uid: nil, idx1: 0, idx2: 0, idx3: 0, idx4: 0, idx5: 0]
   Record.defrecord :bot_record, @bot_record_fields

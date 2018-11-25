@@ -22,8 +22,9 @@ defmodule SknBot.MixProject do
   defp deps do
     [
       {:skn_lib, git: "git@gitlab.com:gskynet/skn_lib.git", branch: "master"},
-      {:ecto, "~> 2.2"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:ecto, "~> 3.0"},
+      {:postgrex, "~> 0.14.1"},
     ]
   end
 end

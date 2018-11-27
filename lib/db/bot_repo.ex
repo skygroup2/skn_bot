@@ -41,7 +41,7 @@ defmodule Skn.Bot.Repo.Ban do
         field :bot,     :string
         field :info,    :map
 
-        timestamps()
+        timestamps([type: :utc_datetime_usec])
     end
 
     def changeset(%Ban{} = card_info, attrs) do

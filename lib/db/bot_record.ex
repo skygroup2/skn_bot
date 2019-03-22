@@ -66,17 +66,6 @@ defmodule Skn.DB.Bot do
     end
   end
 
-  def gen_league_name() do
-    l1 = Enum.random([3, 4, 5])
-    l2 = Enum.random([1, 2])
-    a1 = (Enum.map 0..l1, fn (_) -> Enum.random(97..122) end)
-         |> :binary.list_to_bin
-    a2 = (Enum.map 0..l2, fn (_) -> Enum.random(48..57) end)
-         |> :binary.list_to_bin
-    (a1 <> a2)
-    |> String.capitalize
-  end
-
   #If you are seeding random like this strong_rand_bytes is better to use
   #also this function can produce a multicast address:
   #  which is not a valid mac if you want your packets routed to dst
@@ -115,7 +104,6 @@ defmodule Skn.DB.Bot do
 
   def bot_default() do
     uuid = gen_uuid()
-    ts_now = System.system_time(:millisecond)
     seed = :rand.uniform(500000)
     app = Skn.Config.get(:app, "mm")
     device = Skn.Config.get(:bot_device, :android)
@@ -234,25 +222,6 @@ defmodule Skn.DB.Bot do
         obj = Skn.Bot.Repo.bot_record(r, config: data)
         :mnesia.dirty_write(:bot_record, obj)
       _ -> nil
-    end
-  end
-
-  def list_account() do
-    mh = {:bot_record2, :_, :_, {:'$1', :_}, :_, :_, :_, :_, :_}
-    mg = [{:orelse, {:'==', :'$1', :google}, {:orelse, {:'==', :'$1', :facebook}, {:'==', :'$1', :apple}}}]
-    mr = [:'$_']
-    all = :mnesia.dirty_select(:bot_record2, [{mh, mg, mr}])
-    for r <- all do
-      %{
-        id: Skn.Bot.Repo.bot_record(r, :id),
-        config: Skn.Bot.Repo.bot_record(r, :config),
-        idx5: Skn.Bot.Repo.bot_record(r, :idx5),
-        idx4: Skn.Bot.Repo.bot_record(r, :idx4),
-        idx3: Skn.Bot.Repo.bot_record(r, :idx3),
-        idx2: Skn.Bot.Repo.bot_record(r, :idx2),
-        idx1: Skn.Bot.Repo.bot_record(r, :idx1),
-        uid: Skn.Bot.Repo.bot_record(r, :uid)
-      }
     end
   end
 

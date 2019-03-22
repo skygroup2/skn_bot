@@ -115,31 +115,37 @@ defmodule Skn.DB.Bot do
 
   def bot_default() do
     uuid = gen_uuid()
-    mac = gen_mac_address2()
-    ts_now = :erlang.system_time(:millisecond)
+    ts_now = System.system_time(:millisecond)
     seed = :rand.uniform(500000)
+    app = Skn.Config.get(:app, "mm")
     device = Skn.Config.get(:bot_device, :android)
-    hmac = cond do
-      device == :androidcn or device == :androidcn18 ->
-        "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
-      device == :ioscn or device == :ioscn18 or device == :ios ->
-        "6732911bfeee56d409a806ff136cd80596c2cf220c737f3435f2ad037952f50f"
-      true ->
-        # :crypto.hash(:sha256, mac) |> Base.encode16(case: :lower)
-        "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
+    if app in ["fm", "nm", "mm", "nma", "nmci", "nmca"] do
+      mac = gen_mac_address2()
+      hmac = cond do
+        device == :androidcn or device == :androidcn18 ->
+          "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
+        device == :ioscn or device == :ioscn18 or device == :ios ->
+          "6732911bfeee56d409a806ff136cd80596c2cf220c737f3435f2ad037952f50f"
+        true ->
+          # :crypto.hash(:sha256, mac) |> Base.encode16(case: :lower)
+          "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
+      end
+      %{
+        device: device,
+        uuid: uuid,
+        androidId: gen_android_id(device),
+        mac: mac,
+        macHash: hmac,
+        seed: seed
+      }
+    else
+      %{
+        device: device,
+        uuid: uuid,
+        androidId: gen_android_id(device),
+        seed: seed
+      }
     end
-    # Sony seed = 11640
-    config = %{
-      device: device,
-      uuid: uuid,
-      androidId: gen_android_id(device),
-      game_fresh: 0,
-      mac: mac,
-      macHash: hmac,
-      seed: seed,
-      created: ts_now
-    }
-    config
   end
 
   def create(id \\ nil, config \\ nil) do

@@ -6,9 +6,9 @@ defmodule Skn.DB.Bot do
     keys = :mnesia.dirty_all_keys(:bot_record)
     keys = Enum.filter keys, fn x -> is_integer(x) end
     if length(keys) > 0 do
-      Skn.Config.set(:bot_id_seq, Enum.max(keys))
+      Skn.Config.reset_id(:bot_id_seq, Enum.max(keys))
     else
-      Skn.Config.set(:bot_id_seq, 0)
+      Skn.Config.reset_id(:bot_id_seq, 0)
     end
   end
 

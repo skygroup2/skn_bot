@@ -2,6 +2,14 @@ defmodule Skn.DB.Bot do
   require Skn.Bot.Repo
   require Logger
 
+  @doc """
+    id   : integer
+    uid  : string / integer for indexing in case check and block other robot
+    config:
+      - uuid_meta : list of key and type of unique [{:uuid, :uuid}, {:mac, :mac}, {:androidId, :uuid/:android}]
+      - persistent_meta : list of persistent key default [:cc, :device]
+  """
+
   def update_id() do
     keys = :mnesia.dirty_all_keys(:bot_record)
     keys = Enum.filter keys, fn x -> is_integer(x) end
@@ -12,27 +20,56 @@ defmodule Skn.DB.Bot do
     end
   end
 
-  def gen_android_id(device) do
-    :rand.seed :exs64, :os.timestamp
-    id = case device do
-      :ioscn ->
-        UUID.uuid4()
-        |> String.upcase()
+  def format_android_id(device, uuid) do
+    case device do
       :ios ->
-        UUID.uuid4()
-        |> String.upcase()
-      _ ->
-        a = :crypto.strong_rand_bytes(8)
-        a
-        |> Base.encode16(case: :lower)
+        String.upcase(uuid)
+      :android ->
+        uuid
     end
-    case Skn.DB.UUID.get({:android, id}) do
+  end
+
+  def gen_uuid({key, :android}) do
+    id = :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
+    case Skn.DB.UUID.get({key, id}) do
       {:ok, %{status: 1}} ->
-        gen_android_id(device)
+        gen_uuid({key, :android})
       _ ->
-        case Skn.DB.UUID.update(%{id: {:android, id}, status: 1}) do
-          :ok -> id
-          _ -> gen_android_id(device)
+        case Skn.DB.UUID.update(%{id: {key, id}, status: 1}) do
+          :ok ->
+            id
+          _ ->
+            gen_uuid({key, :android})
+        end
+    end
+  end
+
+  def gen_uuid({key, :uuid}) do
+    uuid = UUID.uuid4()
+    case Skn.DB.UUID.get({key, uuid}) do
+      {:ok, %{status: 1}} ->
+        gen_uuid({key, :uuid})
+      _ ->
+        case Skn.DB.UUID.update(%{id: {key, uuid}, status: 1}) do
+          :ok ->
+            uuid
+          _ ->
+            gen_uuid({key, :uuid})
+        end
+    end
+  end
+
+  def gen_uuid({key, :mac, vendors}) do
+    uuid = gen_mac_by_vendor(vendors)
+    case Skn.DB.UUID.get({key, uuid}) do
+      {:ok, %{status: 1}} ->
+        gen_uuid({key, :mac, vendors})
+      _ ->
+        case Skn.DB.UUID.update(%{id: {key, uuid}, status: 1}) do
+          :ok ->
+            uuid
+          _ ->
+            gen_uuid({key, :mac, vendors})
         end
     end
   end
@@ -66,100 +103,88 @@ defmodule Skn.DB.Bot do
     end
   end
 
-  #If you are seeding random like this strong_rand_bytes is better to use
-  #also this function can produce a multicast address:
-  #  which is not a valid mac if you want your packets routed to dst
-  def gen_mac_address2() do
-    <<first :: 7, _ :: 1, mac :: 40>> = :crypto.strong_rand_bytes(6)
-    mac = <<first :: 7, 0 :: 1, mac :: 40>>
-    mac = (
-      mac
+  def gen_mac_by_vendor(vendors) do
+    vendors = if List.wrap(vendors) == [], do: ["8C8EF2", "8C8FE9", "5C969D", "5C97F3", "5C8D4E"], else: vendors
+    Base.decode16!(String.upcase(Enum.random(vendors))) <> :crypto.strong_rand_bytes(3)
       |> :erlang.binary_to_list
       |> Enum.map(&(Base.encode16(<<&1>>, case: :lower)))
-      |> Enum.join(":"))
-    case Skn.DB.UUID.get({:mac, mac}) do
-      {:ok, %{status: 1}} ->
-        gen_mac_address2()
-      _ ->
-        case Skn.DB.UUID.update(%{id: {:mac, mac}, status: 1}) do
-          :ok -> mac
-          _ -> gen_mac_address2()
-        end
-    end
+      |> Enum.join(":")
   end
 
-  def gen_uuid do
-    uuid = UUID.uuid4
-    case Skn.DB.UUID.get({:uuid, uuid}) do
-      {:ok, %{status: 1}} ->
-        gen_uuid()
+  def hash_mac(device, mac) do
+    case device do
+      :android  ->
+        "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
+      :ios ->
+        "6732911bfeee56d409a806ff136cd80596c2cf220c737f3435f2ad037952f50f"
       _ ->
-        case Skn.DB.UUID.update(%{id: {:uuid, uuid}, status: 1}) do
-          :ok -> uuid
-          _ -> gen_uuid()
-        end
+        :crypto.hash(:sha256, mac) |> Base.encode16(case: :lower)
     end
   end
 
 
-  def bot_default() do
-    uuid = gen_uuid()
-    seed = :rand.uniform(500000)
-    app = Skn.Config.get(:app, "mm")
-    device = Skn.Config.get(:bot_device, :android)
-    if app in ["fm", "nm", "mm", "nma", "nmci", "nmca"] do
-      mac = gen_mac_address2()
-      hmac = cond do
-        device == :androidcn or device == :androidcn18 ->
-          "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
-        device == :ioscn or device == :ioscn18 or device == :ios ->
-          "6732911bfeee56d409a806ff136cd80596c2cf220c737f3435f2ad037952f50f"
-        true ->
-          # :crypto.hash(:sha256, mac) |> Base.encode16(case: :lower)
-          "c248c629af1fe0a8c46b95668064c1d2952a9e91d207bc0cc3c5d584c2f7553a"
+  def init_conf(device, uuid_meta, persistent_meta) do
+    config = %{device: device, uuid_meta: uuid_meta, persistent_meta: persistent_meta}
+    Enum.reduce(uuid_meta, config, fn x, acc ->
+      name = elem(x, 0)
+      value = gen_uuid(x)
+      if name == :androidId do
+        Map.put(acc, name, format_android_id(device, value))
+      else
+        Map.put(acc, name, value)
       end
-      %{
-        device: device,
-        uuid: uuid,
-        androidId: gen_android_id(device),
-        mac: mac,
-        macHash: hmac,
-        seed: seed
-      }
-    else
-      %{
-        device: device,
-        uuid: uuid,
-        androidId: gen_android_id(device),
-        seed: seed
-      }
-    end
+    end)
   end
 
-  def create(id \\ nil, config \\ nil) do
-    {botid, fb} = case id do
-      {:index, id1} ->
-        {Skn.Config.gen_id(:bot_id_seq), id1}
-      {id1, index} ->
-        {id1, index}
-      _ when is_integer(id) ->
-        {id, id}
-      _ when is_binary(id) ->
-        {id, id}
+  def new_conf(id, config) do
+    case config do
+      %{device: device, uuid_meta: uuid_meta, persistent_meta: persistent_meta} ->
+        Map.merge(%{id: id}, init_conf(device, uuid_meta, persistent_meta))
       _ ->
-        id1 = Skn.Config.gen_id(:bot_id_seq)
-        {id1, id1}
+        nil
     end
-    config = if config == nil, do: bot_default(), else: config
-    config = if is_integer(id), do: Map.put(config, :seed, id), else: config
-    config = Map.put config, :id, botid
-    obj = Skn.Bot.Repo.bot_record(id: botid, uid: fb, config: config, idx5: config[:created])
-    :mnesia.dirty_write(:bot_record, obj)
-    get(botid)
   end
 
-  def get(botid) do
-    case :mnesia.dirty_read(:bot_record, botid) do
+  def create(table, id, new_config) do
+    do_write_conf(table, id, id, new_config)
+    get(table, id)
+  end
+
+  def has_index?(table, name, value) do
+    pos = index2pos(name)
+    case :mnesia.dirty_index_read(table, value, pos) do
+      [_r|_] ->
+        true
+      [] ->
+        false
+    end
+  end
+
+  def index(table, id, name, value) do
+    case :mnesia.dirty_read(table, id) do
+      [r | _] ->
+        pos = index2pos(name)
+        obj = put_elem(r, pos - 1, value)
+        :mnesia.dirty_write(table, obj)
+        get(table, id)
+      _ ->
+        nil
+    end
+  end
+
+  defp index2pos(name) do
+    case name do
+      :uid -> 4
+      :idx1 -> 5
+      :idx2 -> 6
+      :idx3 -> 7
+      :idx4 -> 8
+      :idx5 -> 9
+    end
+  end
+
+  def get(table, id) do
+    case :mnesia.dirty_read(table, id) do
       [r | _] ->
         %{
           id: Skn.Bot.Repo.bot_record(r, :id),
@@ -176,142 +201,54 @@ defmodule Skn.DB.Bot do
     end
   end
 
-  def delete(botid) do
-    :mnesia.dirty_delete(:bot_record, botid)
+  def delete(table, id) do
+    :mnesia.dirty_delete(table, id)
   end
 
-  def bot_get_conf!(botid) do
-    case bot_get_conf(botid) do
-      {:ok, config} -> config
-      _ -> throw({:error, :no_exist})
+  def get_conf!(table, id) do
+    case get_conf(table, id) do
+      {:ok, config} ->
+        config
+      _ ->
+        throw({:error, :no_exist})
     end
   end
 
-  def bot_get_conf(botid) do
-    case :mnesia.dirty_read(:bot_record, botid) do
+  def get_conf(table, id) do
+    do_get_conf(table, id)
+  end
+
+  def update_conf(table, id, config) do
+    do_update_conf(table, id, config)
+  end
+
+  def write_conf(table, id, uid\\ nil, config) do
+    do_write_conf(table, id, uid, config)
+  end
+
+  defp do_write_conf(table, id, uid, config) do
+    uid = if uid == nil, do: id, else: uid
+    obj = Skn.Bot.Repo.bot_record(id: id, uid: uid, config: config)
+    :mnesia.dirty_write(table, obj)
+  end
+
+  def do_update_conf(table, id, data) do
+    case :mnesia.dirty_read(table, id) do
+      [r | _] ->
+        obj = Skn.Bot.Repo.bot_record(r, config: data)
+        :mnesia.dirty_write(table, obj)
+      _ ->
+        nil
+    end
+  end
+
+  defp do_get_conf(table, id) do
+    case :mnesia.dirty_read(table, id) do
       [r | _] ->
         {:ok, Skn.Bot.Repo.bot_record(r, :config)}
       _ ->
-        # try to create it
-        r = create(botid, nil)
-        {:ok, r[:config]}
-    end
-  end
-
-  def bot_update_conf(botid, data) do
-    # remove temporary key
-    data = Map.drop(
-      data,
-      [
-        :proxy2,
-        :proxy_auth2,
-        :proxy,
-        :proxy_auth,
-        :proxy_auth_fun,
-        :proxy_keep_alive,
-        :eam_session,
-        :code,
-        :game_code,
-        :eformula,
-        :boot_time,
-        :ah_time
-      ]
-    )
-    case :mnesia.dirty_read(:bot_record, botid) do
-      [r | _] ->
-        obj = Skn.Bot.Repo.bot_record(r, config: data)
-        :mnesia.dirty_write(:bot_record, obj)
-      _ -> nil
-    end
-  end
-
-  @doc """
-      BOT_RECORD2 : store auction / search bot data
-  """
-  def bot_update_conf2(botid, data) do
-    # remove temporary key
-    data = Map.drop(
-      data,
-      [
-        :proxy2,
-        :proxy_auth2,
-        :proxy,
-        :proxy_auth,
-        :proxy_auth_fun,
-        :eam_session,
-        :code,
-        :game_code,
-        :eformula,
-        :boot_time,
-        :ah_time
-      ]
-    )
-    case :mnesia.dirty_read(:bot_record2, botid) do
-      [r | _] ->
-        obj = Skn.Bot.Repo.bot_record(r, config: data)
-        :mnesia.dirty_write(:bot_record2, obj)
-      _ -> nil
-    end
-  end
-
-  def get_index2(fb) do
-    case :mnesia.dirty_index_read(:bot_record2, fb, 4) do
-      [r | _] ->
-        %{
-          id: Skn.Bot.Repo.bot_record(r, :id),
-          config: Skn.Bot.Repo.bot_record(r, :config),
-          idx5: Skn.Bot.Repo.bot_record(r, :idx5),
-          idx4: Skn.Bot.Repo.bot_record(r, :idx4),
-          idx3: Skn.Bot.Repo.bot_record(r, :idx3),
-          idx2: Skn.Bot.Repo.bot_record(r, :idx2),
-          idx1: Skn.Bot.Repo.bot_record(r, :idx1),
-          uid: Skn.Bot.Repo.bot_record(r, :uid)
-        }
-      _ ->
         nil
     end
   end
 
-  def create2(id \\ nil, config \\ nil) do
-    {botid, fb} = case id do
-      {:index, id1} ->
-        {Skn.Config.gen_id(:bot_id_seq2), id1}
-      {id1, index} ->
-        {id1, index}
-      _ when is_integer(id) ->
-        {id, id}
-      _ when is_binary(id) ->
-        {id, id}
-      _ ->
-        id1 = Skn.Config.gen_id(:bot_id_seq2)
-        {id1, id1}
-    end
-    config = if config == nil, do: bot_default(), else: config
-    config = Map.put config, :id, botid
-    obj = Skn.Bot.Repo.bot_record(id: botid, uid: fb, config: config, idx5: config[:created])
-    :mnesia.dirty_write(:bot_record2, obj)
-    get2(botid)
-  end
-
-  def get2(botid) do
-    case :mnesia.dirty_read(:bot_record2, botid) do
-      [r | _] ->
-        %{
-          id: Skn.Bot.Repo.bot_record(r, :id),
-          config: Skn.Bot.Repo.bot_record(r, :config),
-          idx5: Skn.Bot.Repo.bot_record(r, :idx5),
-          idx4: Skn.Bot.Repo.bot_record(r, :idx4),
-          idx3: Skn.Bot.Repo.bot_record(r, :idx3),
-          idx2: Skn.Bot.Repo.bot_record(r, :idx2),
-          idx1: Skn.Bot.Repo.bot_record(r, :idx1),
-          uid: Skn.Bot.Repo.bot_record(r, :uid)
-        }
-      _ ->
-        nil
-    end
-  end
-
-  def delete2(botid) do
-    :mnesia.dirty_delete(:bot_record2, botid)
-  end
 end

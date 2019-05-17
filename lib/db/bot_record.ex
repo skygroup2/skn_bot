@@ -227,9 +227,11 @@ defmodule Skn.DB.Bot do
   end
 
   defp do_write_conf(table, id, uid, config) do
+    id = if id == nil, do: Skn.Config.gen_id(:bot_id_seq), else: id
     uid = if uid == nil, do: id, else: uid
     obj = Skn.Bot.Repo.bot_record(id: id, uid: uid, config: config)
     :mnesia.dirty_write(table, obj)
+    id
   end
 
   def do_update_conf(table, id, data) do

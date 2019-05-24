@@ -123,8 +123,7 @@ defmodule Skn.DB.Bot do
   end
 
 
-  def init_conf(device, uuid_meta, persistent_meta) do
-    config = %{device: device, uuid_meta: uuid_meta, persistent_meta: persistent_meta}
+  defp init_conf(device, uuid_meta, config) do
     Enum.reduce(uuid_meta, config, fn x, acc ->
       name = elem(x, 0)
       value = gen_uuid(x)
@@ -138,8 +137,8 @@ defmodule Skn.DB.Bot do
 
   def new_conf(id, config) do
     case config do
-      %{device: device, uuid_meta: uuid_meta, persistent_meta: persistent_meta} ->
-        Map.merge(%{id: id}, init_conf(device, uuid_meta, persistent_meta))
+      %{device: device, uuid_meta: uuid_meta, persistent_meta: _} ->
+        Map.merge(%{id: id}, init_conf(device, uuid_meta, config))
       _ ->
         nil
     end

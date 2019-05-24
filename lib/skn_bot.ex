@@ -34,7 +34,7 @@ defmodule Skn.Bot do
   end
 
   def dirty_read(id) do
-    Skn.DB.Bot.get_conf(:bot_record, id)
+    Skn.DB.Bot.get(:bot_record, id)
   end
 
   def write(data) do
@@ -97,7 +97,7 @@ defmodule Skn.Bot do
   end
 
   def dirty_read2(id) do
-    Skn.DB.Bot.get_conf(:bot_record2, id)
+    Skn.DB.Bot.get(:bot_record2, id)
   end
 
   def write2(data) do
@@ -168,7 +168,8 @@ defmodule Skn.Bot do
 
   def handle_call({:delete, table, id, meta}, _from, state) do
     try do
-      config = Map.merge(Skn.DB.Bot.get_conf(table, id), meta)
+      config = Skn.DB.Bot.get(table, id)[:config]
+      config = if is_map(config), do: Map.merge(config, meta), else: meta
       r =
         case config do
           %{uuid_meta: uuid_meta, persistent_meta: persistent_meta} ->

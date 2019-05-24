@@ -87,7 +87,7 @@ defmodule Skn.Bot do
     Skn.DB.Bot.delete(:bot_record, id)
   end
 
-  def delete(id, meta) do
+  def delete(id, meta) when is_map(meta) do
     GenServer.call @name, {:delete, :bot_record, id, meta}, 60000
   end
 
@@ -150,7 +150,7 @@ defmodule Skn.Bot do
     Skn.DB.Bot.delete(:bot_record2, id)
   end
 
-  def delete2(id, meta) do
+  def delete2(id, meta) when is_map(meta) do
     GenServer.call @name, {:delete, :bot_record2, id, meta}, 60000
   end
 
@@ -168,7 +168,7 @@ defmodule Skn.Bot do
 
   def handle_call({:delete, table, id, meta}, _from, state) do
     try do
-      config = Skn.DB.Bot.get_conf(table, id)
+      config = Map.merge(Skn.DB.Bot.get_conf(table, id), meta)
       r =
         case config do
           %{uuid_meta: uuid_meta, persistent_meta: persistent_meta} ->

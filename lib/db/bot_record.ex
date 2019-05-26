@@ -239,7 +239,8 @@ defmodule Skn.DB.Bot do
         obj = Skn.Bot.Repo.bot_record(r, config: data)
         :mnesia.dirty_write(table, obj)
       _ ->
-        nil
+        obj = Skn.Bot.Repo.bot_record(id: id, uid: id, config: data)
+        :mnesia.dirty_write(table, obj)
     end
   end
 

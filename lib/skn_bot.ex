@@ -189,7 +189,7 @@ defmodule Skn.Bot do
               if master == node() do
                 Skn.DB.Bot.new_conf(id, new_meta)
               else
-                GenServer.call({@name, master}, {:instance, table, id, new_meta}, 10000)
+                GenServer.call({@name, master}, {:instance, id, new_meta}, 10000)
               end
             # write new bot config to db
             if new_config != nil do

@@ -172,14 +172,14 @@ defmodule Skn.Bot do
       config = if is_map(config), do: Map.merge(config, meta), else: meta
       r =
         case config do
-          %{uuid_meta: uuid_meta, persistent_meta: persistent_meta} ->
+          %{device: device, uuid_meta: uuid_meta, persistent_meta: persistent_meta} ->
             master = Skn.Config.get(:master, :"msm@node1.skn")
             del_meta = Enum.map(uuid_meta, fn x ->
               name = elem(x, 0)
               {name, Map.get(config, name, nil)}
             end)
-            meta = Map.merge(%{uuid_meta: uuid_meta, persistent_meta: persistent_meta}, meta)
-            new_meta = Enum.reduce(persistent_meta, meta, fn (x, acc) ->
+            meta2 = %{device: device, uuid_meta: uuid_meta, persistent_meta: persistent_meta}
+            new_meta = Enum.reduce(persistent_meta, meta2, fn (x, acc) ->
               v = Map.get(config, x, nil)
               if v != nil, do: Map.put(acc, x, v), else: acc
             end)

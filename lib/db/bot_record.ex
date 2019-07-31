@@ -75,32 +75,23 @@ defmodule Skn.DB.Bot do
   end
 
   def gen_player_name(min_len \\ 5, max_len \\ 9, mix_num \\ false, start_number\\ false) do
-    is_gen_name = Skn.Config.get(:is_gen_name, true)
-    if is_gen_name == true do
-      alg = Enum.random([:exs64, :exsplus, :exsp, :exs1024, :exs1024s, :exrop])
-      alg_seed = {System.system_time(:millisecond), :erlang.phash2(self()), :erlang.phash2(:crypto.strong_rand_bytes(max_len))}
-      :rand.seed(alg, alg_seed)
-      letter_low = 97..122
-      letter_up = 65..90
-      digit = 48..57
+    alg = Enum.random([:exs64, :exsplus, :exsp, :exs1024, :exs1024s, :exrop])
+    alg_seed = {System.system_time(:millisecond), :erlang.phash2(self()), :erlang.phash2(:crypto.strong_rand_bytes(max_len))}
+    :rand.seed(alg, alg_seed)
+    letter_low = 97..122
+    letter_up = 65..90
+    digit = 48..57
 
-      l = Enum.random(min_len..(max_len - 1))
-      fc = if start_number == true do
-        Enum.random(Enum.random([letter_low, letter_up, digit]))
-      else
-        Enum.random(Enum.random([letter_up, letter_low]))
-      end
-      rs = if mix_num == true, do: Enum.random([letter_low, digit]), else: letter_low
-      <<fc>> <> ((Enum.map 0..l, fn (_) ->
-        Enum.random(rs)
-      end) |> :binary.list_to_bin)
+    l = Enum.random(min_len..(max_len - 1))
+    fc = if start_number == true do
+      Enum.random(Enum.random([letter_low, letter_up, digit]))
     else
-      last = :ets.last(:mmorpg_names)
-      first = 0
-      i = Enum.random(Enum.shuffle(first..last))
-      [{_, n}] = :ets.lookup(:mmorpg_names, i)
-      n
+      Enum.random(Enum.random([letter_up, letter_low]))
     end
+    rs = if mix_num == true, do: Enum.random([letter_low, digit]), else: letter_low
+    <<fc>> <> ((Enum.map 0..l, fn (_) ->
+      Enum.random(rs)
+    end) |> :binary.list_to_bin)
   end
 
   def gen_mac_by_vendor(vendors) do

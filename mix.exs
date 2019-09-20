@@ -23,9 +23,9 @@ defmodule SknBot.MixProject do
     [
       {:skn_lib, git: "git@gitlab.com:gskynet_lib/skn_lib.git", branch: "master"},
       {:uuid, "~> 1.1"},
-      {:ecto, "~> 3.0"},
-      {:ecto_sql, "~> 3.0"},
-      {:postgrex, "~> 0.14.1"},
+      {:ecto, "~> 3.2"},
+      {:ecto_sql, "~> 3.2"},
+      {:postgrex, "~> 0.15"},
     ]
   end
 end

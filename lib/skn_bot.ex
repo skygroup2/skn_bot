@@ -1,8 +1,10 @@
 defmodule Skn.Bot.Sup do
   use Supervisor
   @name :skn_bot_sup
-  def start_link() do
-    Supervisor.start_link(__MODULE__, [], name: @name)
+
+  def start_link(), do: start_link([])
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: @name)
   end
 
   def init(_) do

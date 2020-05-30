@@ -7,11 +7,11 @@ defmodule Skn.Bot.Sup do
     Supervisor.start_link(__MODULE__, args, name: @name)
   end
 
-  def init(_) do
+  def init(_args) do
     children = [
-      worker(Skn.Bot, [[]]),
+      Skn.Bot
     ]
-    supervise(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
 
@@ -160,8 +160,8 @@ defmodule Skn.Bot do
     GenServer.cast(@name, {:add_uuid, metadata})
   end
 
-  def start_link(args, opts \\ []) do
-    GenServer.start_link(__MODULE__, args, opts ++ [name: @name])
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: @name)
   end
 
   def init(_args) do

@@ -1,25 +1,25 @@
 defmodule Skn.DB.BotSession do
     require Logger
-    def get(botid) do
-        case :ets.lookup(:bot_session, botid) do
+    def get(bot_id) do
+        case :ets.lookup(:bot_session, bot_id) do
             [c|_] -> c
             _ -> nil
         end
     end
 
-    def get(bottype, botid) do
-        case bottype do
+    def get(bot_type, bot_id) do
+        case bot_type do
         :farmer ->
-            get(botid)
+            get(bot_id)
         :order ->
-            get(botid)
+            get(bot_id)
         _ ->
-            get("AH_#{botid}")
+            get("AH_#{bot_id}")
         end
     end
 
-    def set(bottype, bot, data) do
-        case bottype do
+    def set(bot_type, bot, data) do
+        case bot_type do
         :farmer ->
             set(bot, data)
         :order ->
@@ -33,21 +33,21 @@ defmodule Skn.DB.BotSession do
         :ets.insert :bot_session, {bot, data}
     end
 
-    def delete(bottype, botid) do
-        case bottype do
+    def delete(bot_type, bot_id) do
+        case bot_type do
         :farmer ->
-            delete(botid)
+            delete(bot_id)
         :order ->
-            delete(botid)
+            delete(bot_id)
         _ ->
-            delete("AH_#{botid}")
+            delete("AH_#{bot_id}")
         end
     end
 
-    defp delete(botid) do
-        case get(botid) do
+    defp delete(bot_id) do
+        case get(bot_id) do
         {_, %{pid: pid}} when pid == self() ->
-            :ets.delete(:bot_session, botid)
+            :ets.delete(:bot_session, bot_id)
         _ ->
             nil
         end

@@ -5,7 +5,7 @@ defmodule SknBot.MixProject do
     [
       app: :skn_bot,
       version: "0.1.0",
-      elixir: "~> 1.7",
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -22,10 +22,7 @@ defmodule SknBot.MixProject do
   defp deps do
     [
       {:skn_lib, git: "git@gitlab.com:gskynet_lib/skn_lib.git", branch: "master"},
-      {:uuid, "~> 1.1"},
-      {:ecto, "~> 3.2"},
-      {:ecto_sql, "~> 3.2"},
-      {:postgrex, "~> 0.15"},
+      {:uuid, "~> 1.1"}
     ]
   end
 end

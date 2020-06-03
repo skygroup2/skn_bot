@@ -24,8 +24,8 @@ defmodule Skn.Bot do
 
   def q_correlation_id(type, id) do
     cond do
-      type == :farmer -> "BT_#{id}"
-      type in [:search, :auction] -> "BT_AH_#{id}"
+      type == :farmer -> "FM.#{id}"
+      type in [:search, :auction] -> "AH.#{id}"
       true -> "#{id}"
     end
   end

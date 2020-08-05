@@ -6,7 +6,7 @@ defmodule Skn.DB.Bot do
     id   : integer
     uid  : string / integer for indexing in case check and block other robot
     config:
-      - uuid_meta : list of key and type of unique [{:uuid, :uuid}, {:mac, :mac}, {:androidId, :uuid/:android}]
+      - uuid_meta : list of key and type of unique [{:uuid, :uuid}, {:mac, :mac}, {:android_id, :uuid/:android}]
       - persistent_meta : list of persistent key default [:cc, :device]
   """
 
@@ -118,7 +118,7 @@ defmodule Skn.DB.Bot do
     Enum.reduce(uuid_meta, config, fn x, acc ->
       name = elem(x, 0)
       value = gen_uuid(x)
-      if name == :androidId do
+      if name in [:androidId, :android_id] do
         Map.put(acc, name, format_android_id(device, value))
       else
         Map.put(acc, name, value)

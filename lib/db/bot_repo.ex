@@ -13,7 +13,6 @@ defmodule Skn.Bot.Repo do
 
   def create_table() do
     :mnesia.create_table(:bot_record,[disc_copies: [node()], record_name: :bot_record, index: [:uid], attributes: fields(@bot_record_fields)])
-    :mnesia.create_table(:bot_record2,[disc_copies: [node()], record_name: :bot_record, index: [:uid], attributes: fields(@bot_record_fields)])
     :mnesia.create_table(:uuid_record,[disc_copies: [node()], record_name: :uuid_record, attributes: fields(@uuid_record_fields)])
   end
 

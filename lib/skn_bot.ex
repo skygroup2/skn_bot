@@ -93,69 +93,6 @@ defmodule Skn.Bot do
     GenServer.call @name, {:delete, :bot_record, id, meta}, 60000
   end
 
-  ## BOT_RECORD2 : MULE
-  def read2(id) do
-    GenServer.call @name, {:read, :bot_record2, id}, 60000
-  end
-
-  def dirty_read2(id) do
-    Skn.DB.Bot.get(:bot_record2, id)
-  end
-
-  def write2(data) do
-    GenServer.call @name, {:write, :bot_record2, data}, 60000
-  end
-
-  def dirty_write2(data) do
-    try do
-      case data do
-        {id, config} when is_map(config) ->
-          Skn.DB.Bot.write_conf(:bot_record2, id, config)
-          Skn.DB.Bot.get(:bot_record2, id)
-        {id, uid, config} when is_map(config) ->
-          Skn.DB.Bot.write_conf(:bot_record2, id, uid, config)
-          Skn.DB.Bot.get(:bot_record2, id)
-        _ ->
-          nil
-      end
-    catch
-      _, _ ->
-        nil
-    end
-  end
-
-  def update2(id, config) do
-    GenServer.call @name, {:update, :bot_record2, id, config}, 60000
-  end
-
-  def dirty_update2(id, config) do
-    Skn.DB.Bot.update_conf(:bot_record2, id, config)
-  end
-
-  def index2(id, name, value) do
-    GenServer.call @name, {:index, :bot_record2, id, name, value}, 60000
-  end
-
-  def dirty_index2(id, name, value) do
-    Skn.DB.Bot.index(:bot_record2, id, name, value)
-  end
-
-  def has_index2?(name, value) do
-    Skn.DB.Bot.has_index?(:bot_record2, name, value)
-  end
-
-  def remove2(id) do
-    GenServer.call @name, {:remove, :bot_record2, id}, 60000
-  end
-
-  def dirty_remove2(id) do
-    Skn.DB.Bot.delete(:bot_record2, id)
-  end
-
-  def delete2(id, meta) when is_map(meta) do
-    GenServer.call @name, {:delete, :bot_record2, id, meta}, 60000
-  end
-
   def add_uuid(metadata) do
     GenServer.cast(@name, {:add_uuid, metadata})
   end

@@ -44,6 +44,9 @@ defmodule Skn.DB.Bot do
     end
   end
 
+  def gen_uuid({key, :UUID}) do
+    gen_uuid({key, :uuid}) |> String.upcase()
+  end
   def gen_uuid({key, :uuid}) do
     uuid = UUID.uuid4()
     case Skn.DB.UUID.get({key, uuid}) do

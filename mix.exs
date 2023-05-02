@@ -21,8 +21,8 @@ defmodule SknBot.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:skn_lib, git: "git@gitlab.com:gskynet_lib/skn_lib.git", branch: "master"},
-      {:uuid, "~> 1.1"}
+      {:skn_lib, git: "git@github.com:skygroup2/skn_lib.git", branch: "main"},
+      {:elixir_uuid, "~> 1.2"}
     ]
   end
 end

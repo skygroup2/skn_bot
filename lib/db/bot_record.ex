@@ -144,17 +144,7 @@ defmodule Skn.DB.Bot do
     get(table, id)
   end
 
-  def has_index?(table, name, value) do
-    pos = index2pos(name)
-    case :mnesia.dirty_index_read(table, value, pos) do
-      [_r|_] ->
-        true
-      [] ->
-        false
-    end
-  end
-
-  def index(table, id, name, value) do
+  def set_index(table, id, name, value) do
     case :mnesia.dirty_read(table, id) do
       [r | _] ->
         pos = index2pos(name)
@@ -174,19 +164,29 @@ defmodule Skn.DB.Bot do
     end
   end
 
+  def index_get(table, name, value) do
+    pos = index2pos(name)
+    :mnesia.dirty_index_read(table, value, pos)
+    |> Enum.map(fn x -> to_map(x) end)
+  end
+
   def get(table, id) do
     case :mnesia.dirty_read(table, id) do
-      [r | _] ->
-        %{
-          id: Skn.Bot.Repo.bot_record(r, :id),
-          config: Skn.Bot.Repo.bot_record(r, :config),
-          id3: Skn.Bot.Repo.bot_record(r, :id3),
-          id2: Skn.Bot.Repo.bot_record(r, :id2),
-          id1: Skn.Bot.Repo.bot_record(r, :id1),
-        }
-      _ ->
+      [r] ->
+        to_map(r)
+      [] ->
         nil
     end
+  end
+
+  defp to_map(r) do
+    %{
+      id: Skn.Bot.Repo.bot_record(r, :id),
+      config: Skn.Bot.Repo.bot_record(r, :config),
+      id3: Skn.Bot.Repo.bot_record(r, :id3),
+      id2: Skn.Bot.Repo.bot_record(r, :id2),
+      id1: Skn.Bot.Repo.bot_record(r, :id1),
+    }
   end
 
   def delete(table, id) do

@@ -39,6 +39,10 @@ defmodule Skn.Bot do
     Skn.DB.Bot.get(:bot_record, id)
   end
 
+  def dirty_index_read(idx_name, idx_val) do
+    Skn.DB.Bot.index_get(:bot_record, idx_name, idx_val)
+  end
+
   def write(data) do
     GenServer.call @name, {:write, :bot_record, data}, 60000
   end
@@ -69,16 +73,8 @@ defmodule Skn.Bot do
     Skn.DB.Bot.update_conf(:bot_record, id, config)
   end
 
-  def index(id, name, value) do
-    GenServer.call @name, {:index, :bot_record, id, name, value}, 60000
-  end
-
-  def dirty_index(id, name, value) do
-    Skn.DB.Bot.index(:bot_record, id, name, value)
-  end
-
-  def has_index?(name, value) do
-    Skn.DB.Bot.has_index?(:bot_record, name, value)
+  def dirty_set_index(id, name, value) do
+    Skn.DB.Bot.set_index(:bot_record, id, name, value)
   end
 
   def remove(id) do

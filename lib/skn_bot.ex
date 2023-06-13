@@ -49,8 +49,8 @@ defmodule Skn.Bot do
         {id, config} when is_map(config) ->
           Skn.DB.Bot.write_conf(:bot_record, id, config)
           Skn.DB.Bot.get(:bot_record, id)
-        {id, uid, config} when is_map(config) ->
-          Skn.DB.Bot.write_conf(:bot_record, id, uid, config)
+        {id, id1, config} when is_map(config) ->
+          Skn.DB.Bot.write_conf(:bot_record, id, Map.put(config, :id1, id1))
           Skn.DB.Bot.get(:bot_record, id)
         _ ->
           nil
@@ -171,8 +171,8 @@ defmodule Skn.Bot do
           Skn.DB.Bot.write_conf(table, id, config)
           r = Skn.DB.Bot.get(table, id)
           {:reply, r, state}
-        {id, uid, config} when is_map(config) ->
-          Skn.DB.Bot.write_conf(table, id, uid, config)
+        {id, id1, config} when is_map(config) ->
+          Skn.DB.Bot.write_conf(table, id, Map.put(config, :id1, id1))
           r = Skn.DB.Bot.get(table, id)
           {:reply, r, state}
         _ ->

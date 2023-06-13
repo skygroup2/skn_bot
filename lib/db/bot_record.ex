@@ -139,7 +139,7 @@ defmodule Skn.DB.Bot do
   end
 
   def create(table, id, new_config) do
-    do_write_conf(table, id, id, new_config)
+    do_write_conf(table, id, new_config)
     get(table, id)
   end
 
@@ -167,12 +167,9 @@ defmodule Skn.DB.Bot do
 
   defp index2pos(name) do
     case name do
-      :uid -> 4
-      :idx1 -> 5
-      :idx2 -> 6
-      :idx3 -> 7
-      :idx4 -> 8
-      :idx5 -> 9
+      :id1 -> 4
+      :id2 -> 5
+      :id3 -> 6
     end
   end
 
@@ -182,12 +179,9 @@ defmodule Skn.DB.Bot do
         %{
           id: Skn.Bot.Repo.bot_record(r, :id),
           config: Skn.Bot.Repo.bot_record(r, :config),
-          idx5: Skn.Bot.Repo.bot_record(r, :idx5),
-          idx4: Skn.Bot.Repo.bot_record(r, :idx4),
-          idx3: Skn.Bot.Repo.bot_record(r, :idx3),
-          idx2: Skn.Bot.Repo.bot_record(r, :idx2),
-          idx1: Skn.Bot.Repo.bot_record(r, :idx1),
-          uid: Skn.Bot.Repo.bot_record(r, :uid)
+          id3: Skn.Bot.Repo.bot_record(r, :id3),
+          id2: Skn.Bot.Repo.bot_record(r, :id2),
+          id1: Skn.Bot.Repo.bot_record(r, :id1),
         }
       _ ->
         nil
@@ -215,14 +209,16 @@ defmodule Skn.DB.Bot do
     do_update_conf(table, id, config)
   end
 
-  def write_conf(table, id, uid\\ nil, config) do
-    do_write_conf(table, id, uid, config)
+  def write_conf(table, id, config) do
+    do_write_conf(table, id, config)
   end
 
-  defp do_write_conf(table, id, uid, config) do
+  defp do_write_conf(table, id, config) do
     id = if id == nil, do: Skn.Config.gen_id(:bot_id_seq), else: id
-    uid = if uid == nil, do: id, else: uid
-    obj = Skn.Bot.Repo.bot_record(id: id, uid: uid, config: config)
+    id1 = Map.get(config, :id1, id)
+    id2 = Map.get(config, :id2)
+    id3 = Map.get(config, :id3)
+    obj = Skn.Bot.Repo.bot_record(id: id, id1: id1, id2: id2, id3: id3, config: config)
     :mnesia.dirty_write(table, obj)
     id
   end
@@ -230,10 +226,16 @@ defmodule Skn.DB.Bot do
   def do_update_conf(table, id, data) do
     case :mnesia.dirty_read(table, id) do
       [r | _] ->
-        obj = Skn.Bot.Repo.bot_record(r, config: data)
+        id1 = Map.get(data, :id1, Skn.Bot.Repo.bot_record(r, :id1))
+        id2 = Map.get(data, :id2, Skn.Bot.Repo.bot_record(r, :id2))
+        id3 = Map.get(data, :id3, Skn.Bot.Repo.bot_record(r, :id3))
+        obj = Skn.Bot.Repo.bot_record(r, id1: id1, id2: id2, id3: id3, config: data)
         :mnesia.dirty_write(table, obj)
-      _ ->
-        obj = Skn.Bot.Repo.bot_record(id: id, uid: id, config: data)
+      [] ->
+        id1 = Map.get(data, :id1, id)
+        id2 = Map.get(data, :id2)
+        id3 = Map.get(data, :id3)
+        obj = Skn.Bot.Repo.bot_record(id: id, id1: id1, id2: id2, id3: id3, config: data)
         :mnesia.dirty_write(table, obj)
     end
   end
@@ -242,7 +244,7 @@ defmodule Skn.DB.Bot do
     case :mnesia.dirty_read(table, id) do
       [r | _] ->
         {:ok, Skn.Bot.Repo.bot_record(r, :config)}
-      _ ->
+      [] ->
         nil
     end
   end

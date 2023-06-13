@@ -186,7 +186,7 @@ defmodule Skn.Bot do
   end
 
   @doc """
-      GEN API
+  CRUD op
   """
   def handle_call({:instance, id, new_meta}, _from, state) do
     r = Skn.DB.Bot.new_conf(id, new_meta)

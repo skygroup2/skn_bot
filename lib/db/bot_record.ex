@@ -7,6 +7,7 @@ defmodule Skn.DB.Bot do
     uid  : string / integer for indexing in case check and block other robot
     config:
       - uuid_meta : list of key and type of unique [{:uuid, :uuid}, {:mac, :mac}, {:android_id, :uuid/:android}]
+      - index_meta: list of key from id1 -> id3 for indexing
       - persistent_meta : list of persistent key default [:cc, :device]
   """
 
@@ -213,11 +214,17 @@ defmodule Skn.DB.Bot do
     do_write_conf(table, id, config)
   end
 
+  defp get_index_from_config(config, id_name, default \\ nil) do
+    index_meta = Map.get(config, :index_meta, [])
+    {^id_name, id_key} = List.keyfind(index_meta, id_name, 0, {id_name, id_name})
+    Map.get(config, id_key, default)
+  end
+
   defp do_write_conf(table, id, config) do
     id = if id == nil, do: Skn.Config.gen_id(:bot_id_seq), else: id
-    id1 = Map.get(config, :id1, id)
-    id2 = Map.get(config, :id2)
-    id3 = Map.get(config, :id3)
+    id1 = get_index_from_config(config, :id1, id)
+    id2 = get_index_from_config(config, :id2)
+    id3 = get_index_from_config(config, :id3)
     obj = Skn.Bot.Repo.bot_record(id: id, id1: id1, id2: id2, id3: id3, config: config)
     :mnesia.dirty_write(table, obj)
     id
@@ -226,15 +233,15 @@ defmodule Skn.DB.Bot do
   def do_update_conf(table, id, data) do
     case :mnesia.dirty_read(table, id) do
       [r | _] ->
-        id1 = Map.get(data, :id1, Skn.Bot.Repo.bot_record(r, :id1))
-        id2 = Map.get(data, :id2, Skn.Bot.Repo.bot_record(r, :id2))
-        id3 = Map.get(data, :id3, Skn.Bot.Repo.bot_record(r, :id3))
+        id1 = get_index_from_config(data, :id1, Skn.Bot.Repo.bot_record(r, :id1))
+        id2 = get_index_from_config(data, :id2, Skn.Bot.Repo.bot_record(r, :id2))
+        id3 = get_index_from_config(data, :id3, Skn.Bot.Repo.bot_record(r, :id3))
         obj = Skn.Bot.Repo.bot_record(r, id1: id1, id2: id2, id3: id3, config: data)
         :mnesia.dirty_write(table, obj)
       [] ->
-        id1 = Map.get(data, :id1, id)
-        id2 = Map.get(data, :id2)
-        id3 = Map.get(data, :id3)
+        id1 = get_index_from_config(data, :id1, id)
+        id2 = get_index_from_config(data, :id2)
+        id3 = get_index_from_config(data, :id3)
         obj = Skn.Bot.Repo.bot_record(id: id, id1: id1, id2: id2, id3: id3, config: data)
         :mnesia.dirty_write(table, obj)
     end

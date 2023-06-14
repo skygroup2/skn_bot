@@ -133,7 +133,7 @@ defmodule Skn.DB.Bot do
   def new_conf(id, config) do
     case config do
       %{device: device, uuid_meta: uuid_meta, persistent_meta: _} ->
-        Map.merge(%{id: id}, init_conf(device, uuid_meta, config))
+        init_conf(device, uuid_meta, config)
       _ ->
         nil
     end

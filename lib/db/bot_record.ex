@@ -130,7 +130,7 @@ defmodule Skn.DB.Bot do
     end)
   end
 
-  def new_conf(id, config) do
+  def new_conf(_id, config) do
     case config do
       %{device: device, uuid_meta: uuid_meta, persistent_meta: _} ->
         init_conf(device, uuid_meta, config)
